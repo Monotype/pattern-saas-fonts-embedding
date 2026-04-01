@@ -1,1 +1,1 @@
-console.log("SaaS font server placeholder")
+import express from "express"; const app=express(); app.get("/font",(req,res)=>{res.sendFile("/fonts/MyFont.woff2");}); app.listen(3000);
