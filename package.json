@@ -1,0 +1,29 @@
+{
+  "name": "pattern-saas-fonts-embedding",
+  "version": "1.0.0",
+  "description": "Minimal runnable implementation placeholder.",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Monotype/pattern-saas-fonts-embedding.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Monotype/pattern-saas-fonts-embedding/issues"
+  },
+  "homepage": "https://github.com/Monotype/pattern-saas-fonts-embedding#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
