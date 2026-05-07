@@ -1,50 +1,54 @@
-# <PATTERN> Pattern
-_Authoritative, license-safe implementation example_
+# pattern-saas-fonts-embedding
 
-This repository is one of Monotype’s official **Font Implementation Patterns**.
-It demonstrates **best-practice, license-safe usage** of Monotype fonts in
-<DESCRIPTION>.
+> Server-controlled font delivery for SaaS applications.
 
-## 🔍 Scenario Covered
-- Clear, explicit rules for license-safe usage.
-- Demonstration app showing the correct and incorrect approaches.
-- No CDN redistribution.
-- Self-hosted licensed fonts.
-- Cross-linking to canonical reference rules.
+This repository demonstrates the correct pattern for serving licensed fonts in a SaaS architecture. An Express server controls all font delivery through a dedicated endpoint — fonts never enter the client bundle and are never fetched from an uncontrolled CDN.
 
-## 🧭 Reference: Canonical Implementation Truths
-All authoritative guidance lives in:
+## What this pattern demonstrates
 
-👉 https://github.com/Monotype/reference-fonts-implementation
+- An Express server (`server/`) that serves font files from a controlled endpoint with scoped CORS headers
+- A client (`client/`) that loads fonts via `@font-face` pointing to the server endpoint
+- How server-side delivery keeps font assets and licensing obligations under the operator’s control
 
-This repository implements those truths for the <PATTERN> scenario.
+## Why server-controlled delivery is the license-safe approach
 
-## 🔗 Related Patterns
-- Next.js: https://github.com/Monotype/pattern-nextjs-webfonts  
-- React: https://github.com/Monotype/pattern-react-webfonts  
-- SaaS embedding: https://github.com/Monotype/pattern-saas-fonts-embedding  
-- CI/CD: https://github.com/Monotype/pattern-cicd-fonts-usage  
-- Variable fonts: https://github.com/Monotype/pattern-variable-fonts-usage  
+In a SaaS product, end users interact with fonts rendered by your application — constituting font access that requires server or app licensing. Delivering fonts from your own server endpoint (rather than a public CDN or client bundle) keeps delivery within your licensed infrastructure and allows you to enforce access controls, scope delivery to known origins, and maintain audit visibility.
 
-## 📘 Documentation Hub
-Full documentation, including scenario matrices and developer guides:
+## Canonical assertions implemented
 
-👉 <Your Docs Hub URL>
+This pattern implements the following assertions from [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation):
 
-## 🏗️ Runnable Example
-See `/app`, `/src`, `/demo`, or `/server`, depending on this pattern.
+- `pc-004` — web apps and SaaS products require server-level licensing
+- `pc-008` — self-hosting web fonts requires a web font license
+- `pc-009` — in a self-hosted model, Monotype provides the licensing and governance layer; customer infrastructure handles delivery
+- `pc-010` — cross-origin font delivery requires CORS configuration; missing headers cause silent font blocking
 
-## 🧪 CI & Validation
-This repository includes:
-- Build & lint verification
-- Optional font scanning guardrails
-- Pattern-specific validation steps
+## Usage
 
-## 📄 License
-Content © Monotype. Licensed documentation and pattern examples are provided
-for educational and interoperability purposes.
+1. Place a `.woff2` font file in `fonts/` — this directory is gitignored; supply your own under a valid Monotype web font license
+2. Update the filename in `server/index.js` and the URL in `client/fonts.css` to match
+3. Start the server:
 
-## 📣 Support
+```bash
+npm install
+npm start
+```
+
+4. Open `client/index.html` in a browser (served separately, e.g. via Live Server or any static server on port 5173)
+
+To restrict delivery to a specific origin, set the `ALLOWED_ORIGIN` environment variable:
+
+```bash
+ALLOWED_ORIGIN=https://yourapp.com npm start
+```
+
+## Font files
+
+Font files are intentionally excluded from this repository via `.gitignore`. Place your licensed `.woff2` file in `fonts/`. Do not commit font files.
+
+## Requirements
+
+- Node.js 18+
 
 ## Scope and Intent
 
@@ -53,7 +57,7 @@ It is intentionally simplified:
 
 - No authentication logic is shown
 - No tenant binding is implemented
-- CORS and paths are permissive for demonstration
+- CORS is scoped to a configurable origin for demonstration
 
 In a production SaaS system, this endpoint would typically enforce:
 
@@ -61,4 +65,19 @@ In a production SaaS system, this endpoint would typically enforce:
 - product entitlements
 - access tokens or signed URLs
 - rate limits and audit logging
+
+## Related patterns
+
+- [pattern-nextjs-webfonts](https://github.com/Monotype/pattern-nextjs-webfonts) — Next.js build-time font loading via `next/font/local`
+- [pattern-react-webfonts](https://github.com/Monotype/pattern-react-webfonts) — React component library with CSS variable delivery
+- [pattern-cicd-fonts-usage](https://github.com/Monotype/pattern-cicd-fonts-usage) — CI/CD pipeline font management
+- [pattern-variable-fonts-usage](https://github.com/Monotype/pattern-variable-fonts-usage) — variable font axes via CSS
+
+## Support
+
+Use GitHub Discussions (Q&A category) for questions about this pattern.
+
+## License
+
+Code in this repository is provided for educational and interoperability purposes. Font files are not included. Canonical guidance © Monotype Imaging Inc.
 
