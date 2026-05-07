@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "MyFont";
+  src: url("http://localhost:3000/fonts/myfont") format("woff2");
+  font-display: swap;
+}
+
+body {
+  font-family: "MyFont", system-ui, sans-serif;
+}
+
+.sample {
+  font-size: 1.25rem;
+}
