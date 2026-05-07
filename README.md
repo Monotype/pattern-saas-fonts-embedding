@@ -27,20 +27,28 @@ This pattern implements the following assertions from [reference-fonts-implement
 
 1. Place a `.woff2` font file in `fonts/` — this directory is gitignored; supply your own under a valid Monotype web font license
 2. Update the filename in `server/index.js` and the URL in `client/fonts.css` to match
-3. Start the server:
+3. Run the font server and client from two terminals:
 
 ```bash
+# Terminal 1 — font server (default ALLOWED_ORIGIN: http://localhost:5173)
 npm install
 npm start
+
+# Terminal 2 — static client server
+npx serve client --listen 5173
 ```
 
-4. Open `client/index.html` in a browser (served separately, e.g. via Live Server or any static server on port 5173)
+4. Visit `http://localhost:5173` in a browser
 
-To restrict delivery to a specific origin, set the `ALLOWED_ORIGIN` environment variable:
+This two-server setup is intentional — it replicates the cross-origin scenario the pattern is designed for: client and font server on different origins, with the `Access-Control-Allow-Origin` header controlling which client origins may load fonts.
+
+To test with a different client origin or in a deployed environment:
 
 ```bash
 ALLOWED_ORIGIN=https://yourapp.com npm start
 ```
+
+> **Note:** Do not open `client/index.html` directly as a `file://` URL. Browsers send `Origin: null` for file-based requests, which will not match the configured allowed origin and will cause the font to be silently blocked.
 
 ## Font files
 
