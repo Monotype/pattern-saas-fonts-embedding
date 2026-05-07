@@ -45,5 +45,20 @@ Content © Monotype. Licensed documentation and pattern examples are provided
 for educational and interoperability purposes.
 
 ## 📣 Support
-Use GitHub Discussions (Q&A category):
-> https://github.com/Monotype/<pattern-repo>/discussions
+
+## Scope and Intent
+
+This example demonstrates where font-delivery controls belong in a SaaS architecture.
+It is intentionally simplified:
+
+- No authentication logic is shown
+- No tenant binding is implemented
+- CORS and paths are permissive for demonstration
+
+In a production SaaS system, this endpoint would typically enforce:
+
+- tenant identity
+- product entitlements
+- access tokens or signed URLs
+- rate limits and audit logging
+
