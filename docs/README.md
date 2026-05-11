@@ -1,2 +1,0 @@
-# Docs
-Initial documentation placeholder.
