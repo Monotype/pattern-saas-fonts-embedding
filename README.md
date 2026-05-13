@@ -8,6 +8,7 @@ This repository demonstrates the correct pattern for serving licensed fonts in a
 
 - An Express server (`server/`) that serves font files from a controlled endpoint with scoped CORS headers
 - A client (`client/`) that loads fonts via `@font-face` pointing to the server endpoint
+- A **subset** `.woff2` checked in under `fonts/` so CI succeeds without secrets (replace with your own licensed files for forks or private use)
 - How server-side delivery keeps font assets and licensing obligations under the operator’s control
 
 ## Why server-controlled delivery is the license-safe approach
@@ -25,8 +26,8 @@ This pattern implements the following assertions from [reference-fonts-implement
 
 ## Usage
 
-1. Place a `.woff2` font file in `fonts/` — this directory is gitignored; supply your own under a valid Monotype web font license
-2. Update the filename in `server/index.js` and the URL in `client/fonts.css` to match
+1. Obtain font files under a valid Monotype web font license (this repo ships a **small subset** for build/CI; use your own files in forks or production)
+2. Place `.woff2` files in `fonts/` and update the filename in `server/index.js` and the URL in `client/fonts.css` to match
 3. Run the font server and client from two terminals:
 
 ```bash
@@ -52,7 +53,9 @@ ALLOWED_ORIGIN=https://yourapp.com npm start
 
 ## Font files
 
-Font files are intentionally excluded from this repository via `.gitignore`. Place your licensed `.woff2` file in `fonts/`. Do not commit font files.
+This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so ***GitHub Actions** works out of the box. It demonstrates self-hosting only; **redistribution rights for that file are not granted to you**—use fonts you are licensed to deploy. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `public/fonts/placeholder.txt` for placement notes.
+
+To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f public/fonts/YourFile.woff2`** once, or add a **`!public/fonts/YourFile.woff2`** line after the `*.woff2` rule.
 
 ## Requirements
 
@@ -87,5 +90,4 @@ Use GitHub Discussions (Q&A category) for questions about this pattern.
 
 ## License
 
-Code in this repository is provided for educational and interoperability purposes. Font files are not included. Canonical guidance © Monotype Imaging Inc.
-
+Sample application **code** in this repository is licensed under the [MIT License](LICENSE). The **subset font file** in `fonts/` is included **only** as a build/CI demonstration asset; it is **not** licensed to third parties for separate redistribution—use fonts you have rights to ship. Canonical assertion text in [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation) remains subject to that repository’s terms.
