@@ -53,9 +53,9 @@ ALLOWED_ORIGIN=https://yourapp.com npm start
 
 ## Font files
 
-This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so ***GitHub Actions** works out of the box. It demonstrates self-hosting only; **redistribution rights for that file are not granted to you**—use fonts you are licensed to deploy. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `public/fonts/placeholder.txt` for placement notes.
+This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. It demonstrates self-hosting only; **redistribution rights for that file are not granted to you**—use fonts you are licensed to deploy. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `fonts/placeholder.txt` for placement notes.
 
-To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f public/fonts/YourFile.woff2`** once, or add a **`!public/fonts/YourFile.woff2`** line after the `*.woff2` rule.
+To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f fonts/YourFile.woff2`** once, or add a **`!fonts/YourFile.woff2`** line after the `*.woff2` rule.
 
 ## Requirements
 
