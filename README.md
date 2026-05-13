@@ -41,6 +41,8 @@ npx serve client --listen 5173
 
 4. Visit `http://localhost:5173` in a browser
 
+**CI / local smoke:** Run **`npm test`** after **`npm install`**. It starts the font server briefly, retries until `GET /fonts/myfont` succeeds, asserts **`Access-Control-Allow-Origin`**, **`Vary`**, **`Cache-Control`**, and that **`X-Powered-By`** is not sent, then stops the server (same behavior as GitHub Actions).
+
 This two-server setup is intentional — it replicates the cross-origin scenario the pattern is designed for: client and font server on different origins, with the `Access-Control-Allow-Origin` header controlling which client origins may load fonts.
 
 To test with a different client origin or in a deployed environment:
@@ -76,6 +78,8 @@ In a production SaaS system, this endpoint would typically enforce:
 - product entitlements
 - access tokens or signed URLs
 - rate limits and audit logging
+
+The demo server sets **`Vary: Origin`** alongside a reflected **`Access-Control-Allow-Origin`** so shared caches do not serve a font response with the wrong CORS to another browser origin. It also sets a short **`Cache-Control: private, max-age=300`** as a starting point; tune caching (and CDN behavior) once entitlements and privacy requirements are clear. Add a CORS **`OPTIONS`** handler only if font requests stop being “simple” (for example if you add custom headers on authenticated font fetches).
 
 ## Related patterns
 
