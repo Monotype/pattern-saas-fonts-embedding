@@ -23,6 +23,7 @@ This pattern implements the following assertions from [reference-fonts-implement
 - `pc-008` — self-hosting web fonts requires a web font license
 - `pc-009` — in a self-hosted model, Monotype provides the licensing and governance layer; customer infrastructure handles delivery
 - `pc-010` — cross-origin font delivery requires CORS configuration; missing headers cause silent font blocking
+- `pc-012` — some Monotype web font licenses require a tracking script alongside self-hosted font files; this font endpoint handles delivery only—load any required tracking from the client app (for example a script tag in `client/index.html`) when your license mandates it. For privacy-related scope, see the **Clarification** on [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
 
 ## Usage
 
@@ -55,7 +56,7 @@ ALLOWED_ORIGIN=https://yourapp.com npm start
 
 ## Font files
 
-This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. It demonstrates self-hosting only; **redistribution rights for that file are not granted to you**—use fonts you are licensed to deploy. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `fonts/placeholder.txt` for placement notes.
+This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. That file is licensed only for limited testing per **LICENSE** (Monotype terms) and this README’s **License** section—not for regular website use or redistribution. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `fonts/placeholder.txt` for placement notes.
 
 To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f fonts/YourFile.woff2`** once, or add a **`!fonts/YourFile.woff2`** line after the `*.woff2` rule.
 
@@ -94,4 +95,4 @@ Use GitHub Discussions (Q&A category) for questions about this pattern.
 
 ## License
 
-Sample application **code** in this repository is licensed under the [MIT License](LICENSE). The **subset font file** in `fonts/` is included **only** as a build/CI demonstration asset; it is **not** licensed to third parties for separate redistribution—use fonts you have rights to ship. Canonical assertion text in [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation) remains subject to that repository’s terms.
+Sample application code in this repository is licensed under the MIT License. The subset font file in fonts/ is included only as a build/CI demonstration asset and licensed for limited testing purposes only; it is not licensed for regular use on websites or redistribution. Please refer to the LICENSE file in the repository for both licenses. Canonical assertion text in [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation) remains subject to that repository’s terms.

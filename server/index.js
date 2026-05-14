@@ -16,6 +16,8 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
 const fontPath = path.join(__dirname, "..", "fonts", "MyFont.woff2");
 
+// This handler serves font bytes only (see pc-010). If your license requires a tracking
+// script (pc-012 in reference-fonts-implementation), add it from the client app—not here.
 app.get("/fonts/myfont", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
   res.setHeader("Vary", "Origin");

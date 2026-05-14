@@ -1,3 +1,42 @@
+This repository contains material under two separate licenses: (1) a Monotype
+license that applies only to the subset font file identified below, and (2)
+the MIT License, which applies to all other sample code in this repository.
+
+---
+
+1. Subset font file — Monotype license
+
+The subset font file in fonts/ in the pattern-saas-fonts-embedding repository
+(the "Font Software") is licensed under the following terms:
+
+Monotype Imaging Inc. ("Monotype") grants you a non-exclusive, non-assignable,
+non-transferable license to:
+
+- install the Font Software on a user's workstation(s);
+- install the Font Software on a server on which the Font Software may solely be
+  accessed in connection with testing the pattern-saas-fonts-embedding repository
+  provided by Monotype;
+- Use the Font Software on such workstation(s) or via such server to generate
+  content on the user's website for testing purposes only
+
+You may not:
+
+- Use the Font Software as webfont on websites
+- Transfer, rent, lease, sublicense, give, lend, or further distribute the Font
+  Software, or any copy thereof
+- Modify the Font Software in any way, including to create, directly or
+  indirectly, derivative works from the Font Software or any portion thereof
+- Embed the Font Software in open source software which may have the direct or
+  indirect effect of causing the Font Software to become Publicly Available
+  Software or otherwise be subject to a Publicly Available Software agreement
+
+---
+
+2. Sample code — MIT License
+
+Sample code with the exception of the subset font file in fonts/ in the
+pattern-saas-fonts-embedding repository is licensed under the MIT License.
+
 MIT License
 
 Copyright (c) 2026 Monotype Imaging Inc.
