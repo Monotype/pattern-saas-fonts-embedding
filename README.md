@@ -23,6 +23,7 @@ This pattern implements the following assertions from [reference-fonts-implement
 - `pc-008` — self-hosting web fonts requires a web font license
 - `pc-009` — in a self-hosted model, Monotype provides the licensing and governance layer; customer infrastructure handles delivery
 - `pc-010` — cross-origin font delivery requires CORS configuration; missing headers cause silent font blocking
+- `pc-012` — some Monotype web font licenses require a tracking script alongside self-hosted font files; this font endpoint handles delivery only—load any required tracking from the client app (for example a script tag in `client/index.html`) when your license mandates it
 
 ## Usage
 
