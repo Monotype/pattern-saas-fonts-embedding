@@ -1,16 +1,12 @@
 {
   "name": "pattern-saas-fonts-embedding",
   "version": "1.0.0",
-  "description": "Minimal runnable implementation placeholder.",
+  "description": "Reference pattern: Express font endpoint with scoped CORS for SaaS-style embedding.",
   "main": "index.js",
   "type": "module",
-  "directories": {
-    "doc": "docs",
-    "example": "examples"
-  },
   "scripts": {
     "start": "node server/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node scripts/font-smoke.mjs"
   },
   "repository": {
     "type": "git",

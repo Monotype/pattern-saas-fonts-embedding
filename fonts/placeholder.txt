@@ -1,1 +1,5 @@
-place fonts here
+Place your licensed .woff2 files in this directory (same folder as this file).
+
+- Obtain files under a valid Monotype web font license for self-hosted delivery.
+- This repository includes **MyFont.woff2**, a heavily subsetted version of Gotham Regular, for CI only; replace it with your own file and update `server/index.js` (`fontPath`) if you fork or ship your app.
+- Additional font filenames are covered by `*.woff2` in `.gitignore`; use `git add -f` or a `!` exception in `.gitignore` when you intentionally commit another binary.

@@ -8,6 +8,7 @@ This repository demonstrates the correct pattern for serving licensed fonts in a
 
 - An Express server (`server/`) that serves font files from a controlled endpoint with scoped CORS headers
 - A client (`client/`) that loads fonts via `@font-face` pointing to the server endpoint
+- A **subset** `.woff2` checked in under `fonts/` so CI succeeds without secrets (replace with your own licensed files for forks or private use)
 - How server-side delivery keeps font assets and licensing obligations under the operator’s control
 
 ## Why server-controlled delivery is the license-safe approach
@@ -25,8 +26,8 @@ This pattern implements the following assertions from [reference-fonts-implement
 
 ## Usage
 
-1. Place a `.woff2` font file in `fonts/` — this directory is gitignored; supply your own under a valid Monotype web font license
-2. Update the filename in `server/index.js` and the URL in `client/fonts.css` to match
+1. Obtain font files under a valid Monotype web font license (this repo ships a **small subset** for build/CI; use your own files in forks or production)
+2. Place `.woff2` files in `fonts/` and update the filename in `server/index.js` and the URL in `client/fonts.css` to match
 3. Run the font server and client from two terminals:
 
 ```bash
@@ -40,6 +41,8 @@ npx serve client --listen 5173
 
 4. Visit `http://localhost:5173` in a browser
 
+**CI / local smoke:** Run **`npm test`** after **`npm install`**. It starts the font server briefly, retries until `GET /fonts/myfont` succeeds, asserts **`Access-Control-Allow-Origin`**, **`Vary`**, **`Cache-Control`**, and that **`X-Powered-By`** is not sent, then stops the server (same behavior as GitHub Actions).
+
 This two-server setup is intentional — it replicates the cross-origin scenario the pattern is designed for: client and font server on different origins, with the `Access-Control-Allow-Origin` header controlling which client origins may load fonts.
 
 To test with a different client origin or in a deployed environment:
@@ -52,7 +55,9 @@ ALLOWED_ORIGIN=https://yourapp.com npm start
 
 ## Font files
 
-Font files are intentionally excluded from this repository via `.gitignore`. Place your licensed `.woff2` file in `fonts/`. Do not commit font files.
+This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. It demonstrates self-hosting only; **redistribution rights for that file are not granted to you**—use fonts you are licensed to deploy. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `fonts/placeholder.txt` for placement notes.
+
+To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f fonts/YourFile.woff2`** once, or add a **`!fonts/YourFile.woff2`** line after the `*.woff2` rule.
 
 ## Requirements
 
@@ -74,6 +79,8 @@ In a production SaaS system, this endpoint would typically enforce:
 - access tokens or signed URLs
 - rate limits and audit logging
 
+The demo server sets **`Vary: Origin`** alongside a reflected **`Access-Control-Allow-Origin`** so shared caches do not serve a font response with the wrong CORS to another browser origin. It also sets a short **`Cache-Control: private, max-age=300`** as a starting point; tune caching (and CDN behavior) once entitlements and privacy requirements are clear. Add a CORS **`OPTIONS`** handler only if font requests stop being “simple” (for example if you add custom headers on authenticated font fetches).
+
 ## Related patterns
 
 - [pattern-nextjs-webfonts](https://github.com/Monotype/pattern-nextjs-webfonts) — Next.js build-time font loading via `next/font/local`
@@ -87,5 +94,4 @@ Use GitHub Discussions (Q&A category) for questions about this pattern.
 
 ## License
 
-Code in this repository is provided for educational and interoperability purposes. Font files are not included. Canonical guidance © Monotype Imaging Inc.
-
+Sample application **code** in this repository is licensed under the [MIT License](LICENSE). The **subset font file** in `fonts/` is included **only** as a build/CI demonstration asset; it is **not** licensed to third parties for separate redistribution—use fonts you have rights to ship. Canonical assertion text in [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation) remains subject to that repository’s terms.
