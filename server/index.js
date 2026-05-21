@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "node:url";
 
@@ -16,9 +17,18 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
 const fontPath = path.join(__dirname, "..", "fonts", "MyFont.woff2");
 
+// Limit font requests to 60 per minute per IP to prevent DoS via filesystem exhaustion.
+// Tune windowMs / max to match your traffic profile in production.
+const fontRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // This handler serves font bytes only (see pc-010). If your license requires a tracking
 // script (pc-012 in reference-fonts-implementation), add it from the client app—not here.
-app.get("/fonts/myfont", (req, res) => {
+app.get("/fonts/myfont", fontRateLimit, (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
   res.setHeader("Vary", "Origin");
   // Demo: short private cache. Tune (or use CDN rules) once entitlements and

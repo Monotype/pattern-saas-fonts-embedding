@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Monotype/pattern-saas-fonts-embedding#readme",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.5.0"
   }
 }
