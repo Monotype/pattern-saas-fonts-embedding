@@ -1,36 +1,75 @@
 # SaaS Font Delivery: Server-Controlled @font-face Endpoint for License-Safe Web Font Hosting
 
-*Last updated: May 2026 · Maintained by Monotype Imaging Inc.*
+*Last updated: May 2026 — tested against Node.js 18*
 
-> Serving licensed Monotype fonts in a SaaS application via a controlled Express endpoint — scoped CORS, rate limiting, and no client-bundle exposure.
+> Maintained by [Monotype Imaging Inc.](https://www.monotype.com). Authoritative assertion text: [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation).
 
-This repository demonstrates the correct pattern for serving licensed fonts in a SaaS architecture. An Express server controls all font delivery through a dedicated endpoint — fonts never enter the client bundle and are never fetched from an uncontrolled CDN. Scoped `Access-Control-Allow-Origin` headers restrict delivery to known client origins, and rate limiting prevents resource exhaustion. This keeps font delivery under the operator's control, aligned with server or app licensing requirements. Published by Monotype Imaging Inc. and aligned with the [WHATWG Fetch specification — CORS protocol](https://fetch.spec.whatwg.org/#http-cors-protocol) and [W3C CSS Fonts Level 4](https://www.w3.org/TR/css-fonts-4/).
+**Server-controlled font delivery** means your SaaS backend serves licensed `.woff2` files through a dedicated HTTP endpoint — with scoped CORS, cache headers, and rate limiting — rather than exposing font binaries in the client bundle or on a public CDN. **A SaaS application needs this pattern** because end users interact with fonts rendered by your product as part of the service; delivery must stay on operator-controlled infrastructure where you can scope access to known client origins, audit usage, and meet server or app licensing obligations.
+
+Self-hosting licensed web fonts in a SaaS application requires serving font files from that controlled endpoint — not from a public CDN, not bundled inside the client, and not fetched from an uncontrolled third-party origin. This repository is a reference implementation using an Express.js server and [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) CSS declarations ([W3C CSS Fonts Level 4 — `@font-face` rule](https://www.w3.org/TR/css-fonts-4/#font-face-rule)). The server delivers `.woff2` font files through `/fonts/myfont`, sets `Access-Control-Allow-Origin` and `Vary: Origin` per the [MDN CORS guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), and applies `Cache-Control: private, max-age=300` to keep delivery within licensed infrastructure. The pattern keeps font access auditable, scoped to known client origins, and under the operator's control — not redistributed through a client bundle or third-party host.
 
 ## What this pattern demonstrates
 
 - An Express server (`server/`) that serves font files from a controlled endpoint with scoped CORS headers and rate limiting
-- A client (`client/`) that loads fonts via `@font-face` pointing to the server endpoint
-- A **subset** `.woff2` checked in under `fonts/` so CI succeeds without secrets (replace with your own licensed files for forks or private use)
+- A client (`client/`) that loads fonts via [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) pointing to the server endpoint
+- A **subset** `.woff2` checked in under `fonts/` so CI succeeds without secrets (replace with your own licensed files for forks or production)
 - How server-side delivery keeps font assets and licensing obligations under the operator's control
 
 ## Why server-controlled delivery is the license-safe approach
 
 In a SaaS product, end users interact with fonts rendered by your application — constituting font access that requires server or app licensing. Delivering fonts from your own server endpoint (rather than a public CDN or client bundle) keeps delivery within your licensed infrastructure and allows you to enforce access controls, scope delivery to known origins, and maintain audit visibility.
 
-## SaaS font delivery approach comparison
+## Font delivery approaches for SaaS applications
 
-| Approach | Font in client bundle? | Origin control | Rate limiting possible | Recommended |
+| Approach | License compliant for SaaS? | CORS required? | Font extractable by user? | Recommended? |
 |---|---|---|---|---|
-| Server endpoint (this pattern) | No | Scoped to allowed origin | Yes — per-IP middleware | Yes |
-| Inline in client CSS/bundle | Yes — redistributed to all users | None | No | No |
-| Public CDN without access control | No | Open — any origin | CDN-level only | No |
-| Monotype CDN delivery | No | Monotype controls | Monotype enforces | Yes, with CDN subscription |
+| Server endpoint (this pattern) | Yes — delivery stays within operator infrastructure | Yes — configure `Access-Control-Allow-Origin` | No — not in client bundle | Yes |
+| Public CDN (e.g. Google Fonts) | Depends on license — often not permitted for SaaS | Handled by CDN | No | Only with explicit CDN license |
+| Client bundle (bundled in JS/CSS output) | No — font binary redistributed to end users | Not applicable | Yes — easily extracted | No |
+| `next/font/local` (Next.js) | Yes — fonts served by Next.js deployment | Same-origin by default | No | Yes, for Next.js apps — see [pattern-nextjs-webfonts](https://github.com/Monotype/pattern-nextjs-webfonts) |
+| Base64-encoded font in CSS | No — embedded in client-accessible stylesheet | Not applicable | Yes — decoded from CSS | No |
+| Self-hosted via CDN with access controls | Yes — if CDN enforces origin/token restrictions | Yes | No | Yes, for high-scale deployments |
 
-A server-controlled endpoint is the pattern that keeps licensing obligations clear for SaaS: it restricts delivery to your application's domain and makes compliance auditing straightforward.
+For Monotype-licensed fonts: prefer self-hosted rows under a license that permits server-side delivery. Third-party CDN delivery is not authorized unless Monotype explicitly provides a CDN endpoint as part of your agreement.
 
-## How to Implement: Controlled Font Endpoint with Express
+## Frequently asked questions
 
-The server exposes a single font endpoint with scoped CORS and rate limiting:
+### How do I serve web fonts from my own server instead of using Google Fonts or a CDN?
+
+To self-host web fonts, place your licensed `.woff2` files on your server and create an endpoint that returns them with the correct HTTP headers. In Express, this is a single `res.sendFile()` call. In your CSS, write an [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) rule with `src: url('https://your-font-server.com/fonts/myfont') format('woff2')` pointing to that endpoint. You must set `Access-Control-Allow-Origin` on the font response if the client and font server are on different origins, or the browser will **silently block** the font load — inspect the Network tab and rendered typeface, not only the Console. See [pc-010](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#cross-origin-font-delivery-requires-cors-configuration-missing-headers-cause-silent-font-blocking).
+
+### What CORS headers are required for cross-origin font loading?
+
+At minimum, the font server must return `Access-Control-Allow-Origin: https://your-client-origin.com` on every font response. For SaaS applications with **private licensed fonts**, use a **specific origin** value rather than a wildcard (`*`). You should also set [`Vary: Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) so that shared caches (CDNs, proxies) do not serve a response with one origin's CORS header to a request from a different origin. Without `Vary: Origin`, a cached response with the wrong CORS header can cause font blocking for subsequent users. See [MDN: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) and [MDN: Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
+
+### Do SaaS applications require a special font license for web font delivery?
+
+Yes. When end users interact with fonts rendered by a SaaS application, that constitutes font access that typically requires a **server or app license** — not a desktop license. Most Monotype web font licenses for self-hosting require font files to be served from operator-controlled infrastructure rather than redistributed via a public CDN or bundled inside a downloadable client package. Check your specific license agreement; some also require a tracking script alongside self-hosted font files. See [pc-004](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#web-apps-and-saas-products-require-server-level-licensing) and [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
+
+### Why is my @font-face font not loading when I open the HTML file directly?
+
+Opening an HTML file with a `file://` URL causes the browser to send `Origin: null` on font fetch requests. Most CORS configurations do not allow `null` as an origin, so the font response will be blocked. Always test font delivery by serving the client from a local HTTP server (for example, `npx serve client --listen 5173`) rather than opening the file directly. This replicates the actual cross-origin scenario the `Access-Control-Allow-Origin` header is configured for.
+
+### Should licensed web fonts be bundled inside a React or Next.js client bundle?
+
+No — bundling licensed font files inside a JavaScript client package means the font binary can be extracted and redistributed by end users, which typically violates SaaS font license terms and [lc-006](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/licensing-clarity.md#using-a-font-differs-from-distributing-a-font) (using vs. distributing). The correct pattern is to serve fonts from a controlled server endpoint that the client fetches at runtime via [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face). For shared React libraries, use CSS variables so the library never ships font binaries — see [pattern-react-webfonts](https://github.com/Monotype/pattern-react-webfonts). For Next.js, [`next/font/local`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts#local-fonts) handles build-time optimization while keeping files on your infrastructure — see [pattern-nextjs-webfonts](https://github.com/Monotype/pattern-nextjs-webfonts).
+
+### What Cache-Control settings should I use for a licensed font endpoint?
+
+Start with `Cache-Control: private, max-age=300` to allow individual browsers to cache the font for five minutes while preventing shared CDN caches from storing it — important when font access is tied to tenant entitlements or access tokens. Once authentication, entitlement checks, and CDN configuration are finalized, you can increase `max-age` or switch to `public` if all requesting origins are permitted. Always pair private cache responses with `Vary: Origin` so each origin receives the correct CORS headers.
+
+---
+
+## How to implement server-controlled web font delivery in a SaaS application
+
+**Step 1 — Obtain a Monotype web font license that permits self-hosting.**  
+Self-hosting licensed fonts requires an explicit self-hosted web font license — a desktop or CDN-only license does not cover SaaS delivery. Contact Monotype or your account manager to confirm your license covers server-side delivery and whether a tracking script is required. See [pc-008](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#self-hosting-web-fonts-requires-a-web-font-license-desktop-licenses-do-not-permit-web-delivery).
+
+**Step 2 — Place your `.woff2` font files in a server-side directory.**  
+Add your licensed `.woff2` files to a directory on your server (e.g. `fonts/`) that is not publicly browsable. Do not commit production font files to a public repository or include them in client-facing build output. This demo keeps `fonts/MyFont.woff2` outside the client's static asset root.
+
+**Step 3 — Create an Express font endpoint that sets CORS and cache headers.**  
+The endpoint reads the allowed client origin from an environment variable, sets `Access-Control-Allow-Origin` to that specific value, adds `Vary: Origin`, suppresses `X-Powered-By`, applies rate limiting, and streams the font file:
 
 ```javascript
 import express from 'express';
@@ -41,16 +80,16 @@ import { fileURLToPath } from 'node:url';
 const app = express();
 app.disable('x-powered-by');
 
-// Restrict font delivery to known origins — never a wildcard in production.
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
 
-// Limit to 60 requests per minute per IP to prevent DoS via filesystem exhaustion.
 const fontRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+const fontPath = path.join(__dirname, '..', 'fonts', 'MyFont.woff2');
 
 app.get('/fonts/myfont', fontRateLimit, (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
@@ -61,46 +100,62 @@ app.get('/fonts/myfont', fontRateLimit, (req, res) => {
 });
 ```
 
-The client loads the font using a standard `@font-face` declaration pointing to the server endpoint:
+This handler returns the font file only to requests from `ALLOWED_ORIGIN`, preventing unauthorized origins from loading your licensed assets. Next.js and other frameworks emit standard CSS [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) rules at build time; here you control the HTTP response directly.
+
+**Step 4 — Write an `@font-face` rule in your client CSS pointing to the server endpoint.**  
+In `client/fonts.css`, declare the font family using your server's font endpoint URL as the `src`. Do not reference a CDN or a relative path into the client bundle:
 
 ```css
 /* client/fonts.css */
 @font-face {
-  font-family: 'MyMonotypeFont';
+  font-family: 'MyFont';
   src: url('http://localhost:3000/fonts/myfont') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
+
+body {
+  font-family: 'MyFont', system-ui, sans-serif;
+}
 ```
 
-The `Vary: Origin` header ensures shared caches do not serve a font response with the wrong CORS headers to a different browser origin. See [MDN: Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) and [MDN: Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
+Replace `http://localhost:3000` with your production font server URL when deploying. The [`font-display: swap`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) value ensures text remains visible during font load. Syntax is defined in [W3C CSS Fonts Level 4](https://www.w3.org/TR/css-fonts-4/#font-face-rule).
 
-## Step-by-Step: Serving Licensed Fonts from a SaaS Backend
+**Step 5 — Start the font server and client server from separate processes.**  
+The font server and static client must run as two separate processes on different ports. This intentionally replicates the cross-origin scenario: the browser fetches HTML from one origin and font files from another, so the `Access-Control-Allow-Origin` header is exercised exactly as in production:
 
-**Step 1 — Verify your license covers SaaS / server delivery.**
-SaaS products require a server or app license — not a standard desktop or basic web font license. Confirm your Monotype license type covers server-side delivery to end users.
+```bash
+# Terminal 1 — font server on port 3000 (default ALLOWED_ORIGIN: http://localhost:5173)
+npm install
+npm start
 
-**Step 2 — Download your WOFF2 font file.**
-From your Monotype account, download the WOFF2 file. Do not commit production font files to a public repository.
+# Terminal 2 — static client on port 5173
+npx serve client --listen 5173
+```
 
-**Step 3 — Place font files in a server-accessible directory.**
-Add the `.woff2` file to a directory readable by your server process (e.g., `fonts/`). Do not place files in the client bundle or `public/` directory.
+After both servers are running, open `http://localhost:5173` and check DevTools → **Network** → filter by **Font**. The font request should return HTTP 200 with `Access-Control-Allow-Origin: http://localhost:5173`. If the header is missing or does not match the client origin exactly, the browser will block the font **silently**.
 
-**Step 4 — Create a dedicated font-serving endpoint.**
-Expose a route (e.g., `/fonts/myfont`) that reads the font file and sends it with correct headers. Do not serve font files via static middleware that exposes the entire directory.
+**Step 6 — Run the automated smoke test to verify CORS and cache headers.**  
+The included test verifies the same headers GitHub Actions checks:
 
-**Step 5 — Add rate limiting to the font endpoint.**
-Use `express-rate-limit` (or equivalent) to limit requests per IP. This prevents resource exhaustion attacks via the font endpoint.
+```bash
+npm test
+```
 
-**Step 6 — Set scoped CORS headers on the font response.**
-Set `Access-Control-Allow-Origin` to your application's specific origin — not a wildcard (`*`). Set `Vary: Origin` so shared caches respect CORS scope. See [MDN: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
+A passing test confirms `Access-Control-Allow-Origin`, `Vary`, `Cache-Control`, and absence of `X-Powered-By` before you deploy.
 
-**Step 7 — Reference the endpoint in the client @font-face declaration.**
-In the client's global CSS, declare `@font-face` with `src: url('/fonts/myfont') format('woff2')` pointing to the server endpoint. Include `font-display: swap` to prevent invisible text during load.
+**Step 7 — Set the allowed origin environment variable for staging and production.**  
+To test with a production domain or staging environment, pass the client origin as an environment variable before starting the server. The server uses it as the exact string for `Access-Control-Allow-Origin` — not a wildcard:
 
-**Step 8 — Test CORS behavior in browser DevTools.**
-Open the Network tab → filter by "Font." Confirm: (a) the font request returns HTTP 200, (b) `Access-Control-Allow-Origin` is present on the font response, (c) `Vary: Origin` is present, (d) no font load errors appear in the Console.
+```bash
+ALLOWED_ORIGIN=https://app.yourproduct.com npm start
+```
+
+Using an environment variable means the same server code can serve development, staging, and production without modification. **Never use `*` for private licensed font endpoints** — any origin on the internet could load your licensed files.
+
+**Step 8 — Add production hardening — authentication, tenant scoping, and rate limiting.**  
+The reference implementation is intentionally minimal. In production, add middleware to verify tenant identity (JWT, session, or signed URL), check font entitlements per tenant, and apply rate limiting per client IP or tenant ID. This repo's v1.1.0 release adds basic rate limiting as a starting point. Load any required license tracking script from the client app (for example in `client/index.html`), not from the font endpoint — see [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
 
 ## Canonical assertions implemented
 
@@ -110,33 +165,7 @@ This pattern implements the following assertions from [reference-fonts-implement
 - `pc-008` — self-hosting web fonts requires a web font license
 - `pc-009` — in a self-hosted model, Monotype provides the licensing and governance layer; customer infrastructure handles delivery
 - `pc-010` — cross-origin font delivery requires CORS configuration; missing headers cause silent font blocking
-- `pc-012` — some Monotype web font licenses require a tracking script alongside self-hosted font files; this font endpoint handles delivery only—load any required tracking from the client app (for example a script tag in `client/index.html`) when your license mandates it. For privacy-related scope, see the **Clarification** on [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
-
-## Frequently Asked Questions
-
-### Why does a SaaS application need a different font license than a website?
-
-In a SaaS product, end users interact with your application's rendered UI — including fonts — as part of the service. This constitutes font access by third parties through your infrastructure, which requires a server or app license. A standard web font license scoped to page views on a single domain may not cover this usage. Confirm your Monotype license type explicitly covers SaaS or multi-tenant application delivery.
-
-### Why use Access-Control-Allow-Origin instead of a wildcard (*) for fonts?
-
-A wildcard `Access-Control-Allow-Origin: *` allows any website to load fonts from your endpoint, effectively making your server a public font CDN. For licensed fonts, delivery must be restricted to your application's domains. Use `Access-Control-Allow-Origin: https://yourapp.com` to scope delivery to known origins. Set `Vary: Origin` alongside a reflected origin header when you support multiple allowed origins. See [MDN: Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
-
-### What does the Vary: Origin header do on a font response?
-
-`Vary: Origin` tells shared caches (CDNs, proxies) that the response content varies based on the `Origin` request header. Without it, a cache might serve a font response with `Access-Control-Allow-Origin: https://app-a.com` to a request from `app-b.com`, causing the font to be silently blocked. Including `Vary: Origin` ensures each origin receives the correct CORS response. See [MDN: Vary](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary).
-
-### Why are fonts not loading even though the file exists on the server?
-
-The most common cause is a missing or incorrect `Access-Control-Allow-Origin` header. When the client and font server are on different origins (different domains or ports), browsers silently block font loads that are missing correct CORS headers — the failure shows as missing text or fallback fonts, not a visible error. Inspect the font request in browser DevTools → Network tab → select the font request → check the Response Headers for `Access-Control-Allow-Origin`. Also confirm the client is not opened as a `file://` URL, which sends `Origin: null` and will not match any configured allowed origin.
-
-### Can I redistribute fonts via a public CDN or unpkg?
-
-No. Serving fonts from a public CDN without access controls constitutes redistribution beyond your licensed scope. Use a server-controlled endpoint that scopes delivery to known origins, as demonstrated in this pattern. See the [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation) FAQ for more on redistribution boundaries.
-
-### Do I need to add authentication to the font endpoint?
-
-This pattern demonstrates the delivery mechanism without authentication to keep the example minimal. In production SaaS, the font endpoint would typically also enforce tenant identity, product entitlements, and access tokens or signed URLs — depending on your security requirements. Rate limiting (shown in this pattern) is a baseline protection against resource exhaustion.
+- `pc-012` — some Monotype web font licenses require a tracking script alongside self-hosted font files; this font endpoint handles **delivery only** — load any required tracking from the client app when your license mandates it. For privacy-related scope, see the **Clarification** on [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
 
 ---
 
@@ -144,40 +173,29 @@ This pattern demonstrates the delivery mechanism without authentication to keep 
 
 1. Obtain font files under a valid Monotype web font license (this repo ships a **small subset** for build/CI; use your own files in forks or production)
 2. Place `.woff2` files in `fonts/` and update the filename in `server/index.js` and the URL in `client/fonts.css` to match
-3. Run the font server and client from two terminals:
-
-```bash
-# Terminal 1 — font server (default ALLOWED_ORIGIN: http://localhost:5173)
-npm install
-npm start
-
-# Terminal 2 — static client server
-npx serve client --listen 5173
-```
-
-4. Visit `http://localhost:5173` in a browser
+3. Run the font server and client as described in Step 5 above
 
 **CI / local smoke:** Run **`npm test`** after **`npm install`**. It starts the font server briefly, retries until `GET /fonts/myfont` succeeds, asserts **`Access-Control-Allow-Origin`**, **`Vary`**, **`Cache-Control`**, and that **`X-Powered-By`** is not sent, then stops the server (same behavior as GitHub Actions).
-
-This two-server setup is intentional — it replicates the cross-origin scenario the pattern is designed for: client and font server on different origins, with the `Access-Control-Allow-Origin` header controlling which client origins may load fonts.
-
-To test with a different client origin or in a deployed environment:
-
-```bash
-ALLOWED_ORIGIN=https://yourapp.com npm start
-```
 
 > **Note:** Do not open `client/index.html` directly as a `file://` URL. Browsers send `Origin: null` for file-based requests, which will not match the configured allowed origin and will cause the font to be silently blocked.
 
 ## Font files
 
-This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. That file is licensed only for limited testing per **LICENSE** (Monotype terms) and this README's **License** section—not for regular website use or redistribution. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css` to match. See `fonts/placeholder.txt` for placement notes.
+This repository includes **`fonts/MyFont.woff2`**, a heavily subsetted version of Gotham Regular, so **GitHub Actions** works out of the box. That file is licensed only for limited testing per **LICENSE** (Monotype terms) and this README's **License** section — not for regular website use or redistribution. For your own project, replace the file and update the filename in `server/index.js` and the URL in `client/fonts.css`. See `fonts/placeholder.txt` for placement notes.
 
-To commit a different binary despite `*.woff2` in `.gitignore`, use **`git add -f fonts/YourFile.woff2`** once, or add a **`!fonts/YourFile.woff2`** line after the `*.woff2` rule.
+Because `*.woff2` is excluded in `.gitignore`, force-add any specific font file you need tracked in version control:
+
+```bash
+git add -f fonts/YourFile.woff2
+```
+
+Only do this for demo or test assets — production-licensed font files should be injected via CI secrets or artifact storage when possible.
+
+The `.woff2` format is supported by all modern browsers as of 2018 ([caniuse: WOFF2](https://caniuse.com/woff2)); no fallback formats are required for current browser baselines.
 
 ## Requirements
 
-- Node.js 18+
+- [Node.js 18+](https://nodejs.org/en/about/releases/)
 
 ## Scope and Intent
 
