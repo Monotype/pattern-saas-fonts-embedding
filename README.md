@@ -1,4 +1,4 @@
-# SaaS Font Delivery: Server-Controlled @font-face Endpoint for License-Safe Web Font Hosting
+# SaaS Font Delivery: Server-Controlled `@font-face` Endpoint for License-Safe Web Font Hosting
 
 *Last updated: May 2026 — tested against Node.js 18*
 
@@ -46,7 +46,7 @@ At minimum, the font server must return `Access-Control-Allow-Origin: https://yo
 
 Yes. When end users interact with fonts rendered by a SaaS application, that constitutes font access that typically requires a **server or app license** — not a desktop license. Most Monotype web font licenses for self-hosting require font files to be served from operator-controlled infrastructure rather than redistributed via a public CDN or bundled inside a downloadable client package. Check your specific license agreement; some also require a tracking script alongside self-hosted font files. See [pc-004](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#web-apps-and-saas-products-require-server-level-licensing) and [pc-012](https://github.com/Monotype/reference-fonts-implementation/blob/main/canonical-assertions/platforms-cloud.md#some-monotype-web-font-licenses-require-a-tracking-script-alongside-self-hosted-font-files).
 
-### Why is my @font-face font not loading when I open the HTML file directly?
+### Why is my `@font-face` font not loading when I open the HTML file directly?
 
 Opening an HTML file with a `file://` URL causes the browser to send `Origin: null` on font fetch requests. Most CORS configurations do not allow `null` as an origin, so the font response will be blocked. Always test font delivery by serving the client from a local HTTP server (for example, `npx serve client --listen 5173`) rather than opening the file directly. This replicates the actual cross-origin scenario the `Access-Control-Allow-Origin` header is configured for.
 
