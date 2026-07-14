@@ -1,12 +1,12 @@
-# SaaS Font Delivery: Server-Controlled `@font-face` Endpoint for License-Safe Web Font Hosting
+# How to Serve Proprietary Fonts in a SaaS App Without Embedding Them in the Client Bundle
 
-*Last updated: May 2026 — tested against Node.js 18*
+*Server-controlled `@font-face` endpoint · Last updated May 2026 — tested against Node.js 18*
 
 > Maintained by [Monotype Imaging Inc.](https://www.monotype.com). Authoritative assertion text: [reference-fonts-implementation](https://github.com/Monotype/reference-fonts-implementation).
 
-**Server-controlled font delivery** means your SaaS backend serves licensed `.woff2` files through a dedicated HTTP endpoint — with scoped CORS, cache headers, and rate limiting — rather than exposing font binaries in the client bundle or on a public CDN. **A SaaS application needs this pattern** because end users interact with fonts rendered by your product as part of the service; delivery must stay on operator-controlled infrastructure where you can scope access to known client origins, audit usage, and meet server or app licensing obligations.
+**How do you deliver proprietary Monotype fonts in a SaaS product without putting `.woff2` files in the client bundle?** Serve them from an operator-controlled HTTP endpoint — scoped CORS, cache headers, and rate limiting — so licensed fonts never ship inside the downloadable JS/CSS package or on a public CDN. End users still render your UI typeface in the browser; delivery and audit stay on infrastructure you control, which matches typical **server or app** licensing obligations.
 
-Self-hosting licensed web fonts in a SaaS application requires serving font files from that controlled endpoint — not from a public CDN, not bundled inside the client, and not fetched from an uncontrolled third-party origin. This repository is a reference implementation using an Express.js server and [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) CSS declarations ([W3C CSS Fonts Level 4 — `@font-face` rule](https://www.w3.org/TR/css-fonts-4/#font-face-rule)). The server delivers `.woff2` font files through `/fonts/myfont`, sets `Access-Control-Allow-Origin` and `Vary: Origin` per the [MDN CORS guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), and applies `Cache-Control: private, max-age=300` to keep delivery within licensed infrastructure. The pattern keeps font access auditable, scoped to known client origins, and under the operator's control — not redistributed through a client bundle or third-party host.
+This repository is a reference implementation: an Express.js server exposes `/fonts/myfont`, and the client loads it with [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) ([W3C CSS Fonts Level 4](https://www.w3.org/TR/css-fonts-4/#font-face-rule)). Responses set `Access-Control-Allow-Origin` and `Vary: Origin` per [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), plus `Cache-Control: private, max-age=300`, so access stays auditable and scoped to known origins — not redistributed through a client bundle or uncontrolled host.
 
 ## What this pattern demonstrates
 
